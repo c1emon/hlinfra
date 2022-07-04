@@ -1,16 +1,42 @@
 version: '3'
 services:
   headscale:
-    image: headscale/headscale
+    image: "headscale/headscale"
+    container_name: "headscale"
+    hostname: "headscale"
     restart: unless-stopped
     ports:
-      - 8080:8080
-      # - 9090:9090
+      - 8080
+      - 9090
       - 12345:12345
       - 3478:3478
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.whoami.entrypoints=websecure"
+      - "traefik.http.routers.whoami.tls.certresolver=lets-encr"
+      - "traefik.http.routers.whoami.rule=Host(`whoami.$MY_DOMAIN`)"
     volumes:
-      - ./data/config:/etc/headscale/
-      - ./data/lib:/var/lib/headscale
+      - "./headscale/config:/etc/headscale/:ro"
+      - "./headscale/data:/var/lib/headscale:rw"
     command:
       - "headscale"
       - "serve"
+  traefik:
+    image: "traefik"
+    container_name: "traefik"
+    restart: unless-stopped
+    hostname: "traefik"
+    ports:
+      - 80:80
+      - 443:443
+      - 8080:8080
+    volumes:
+      - "./traefik/acme.json:/acme.json"
+      - "./traefik/traefik.yaml:/traefik.yml:ro"
+      - "/var/run/docker.sock:/var/run/docker.sock:ro"
+      
+
+networks:
+  default:
+    external:
+      name: DEFAULT_NETWORK
