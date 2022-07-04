@@ -31,7 +31,7 @@ services:
       - 443:443
       - 8080:8080
     volumes:
-      - "./traefik/acme.json:/acme.json"
+      - "./traefik/acme.json:/acme.json:rw"
       - "./traefik/traefik.yaml:/traefik.yml:ro"
       - "/var/run/docker.sock:/var/run/docker.sock:ro"
       
