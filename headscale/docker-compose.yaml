@@ -1,0 +1,16 @@
+version: '3'
+services:
+  headscale:
+    image: headscale/headscale
+    restart: unless-stopped
+    ports:
+      - 8080:8080
+      # - 9090:9090
+      - 12345:12345
+      - 3478:3478
+    volumes:
+      - ./data/config:/etc/headscale/
+      - ./data/lib:/var/lib/headscale
+    command:
+      - "headscale"
+      - "serve"

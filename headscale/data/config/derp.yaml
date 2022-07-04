@@ -1,0 +1,13 @@
+regions:
+  999:
+    regionid: 999
+    regioncode: headscale
+    regionname: Headscale Embedded DERP
+    nodes:
+      - name: 999a
+        regionid: 999
+        hostname: headscale
+        ipv4: 121.40.67.54
+        stunport: 3478
+        stunonly: false
+        derpport: 8080
