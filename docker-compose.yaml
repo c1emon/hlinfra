@@ -1,5 +1,101 @@
 version: '3'
 services:
+  clash:
+    image: dreamacro/clash-premium
+    restart: always
+    cap_add:
+      - NET_ADMIN
+    networks:
+      default:
+        ipv4_address: "172.38.1.240"
+    ports:
+      - "7890"
+      - "53"
+      - "9090"
+    volumes:
+      - ./clash/clash-config.yaml:/root/.config/clash/config.yaml
+      - ./resolvs/clash-resolv.conf:/etc/resolv.conf:ro
+  # clash_dashboard:
+  #   image: haishanh/yacd
+  #   restart: always
+  #   depends_on:
+  #     - clash
+  #   networks:
+  #     - default
+  #   ports:
+  #     - "80"
+  registry_k8s:
+    image: registry:2.7.1
+    restart: on-failure
+    depends_on:
+      - clash
+    ports:
+      - 5000
+    volumes:
+      - "./registry/config.yaml/:/etc/docker/registry/config.yml:ro"
+      - ./resolvs/registry-resolv.conf:/etc/resolv.conf:ro
+    environment:
+      - http_proxy=http://172.38.1.240:7890
+      - https_proxy=http://172.38.1.240:7890
+      - REGISTRY_PROXY_REMOTEURL=https://k8s.gcr.io
+      - REGISTRY_AUTH_HTPASSWD_REALM=token-realm
+      - REGISTRY_AUTH_HTPASSWD_PATH=/run/secrets/htpasswd
+    secrets:
+      - htpasswd
+  registry_gcr:
+    image: registry:2.7.1
+    restart: on-failure
+    depends_on:
+      - clash
+    ports:
+      - 5000
+    volumes:
+      - "./registry/config.yaml/:/etc/docker/registry/config.yml:ro"
+      - ./resolvs/registry-resolv.conf:/etc/resolv.conf:ro
+    environment:
+      - http_proxy=http://172.38.1.240:7890
+      - https_proxy=http://172.38.1.240:7890
+      - REGISTRY_PROXY_REMOTEURL=https://gcr.io
+      - REGISTRY_AUTH_HTPASSWD_REALM=token-realm
+      - REGISTRY_AUTH_HTPASSWD_PATH=/run/secrets/htpasswd
+    secrets:
+      - htpasswd
+  registry_ghcr:
+    image: registry:2.7.1
+    restart: on-failure
+    depends_on:
+      - clash
+    ports:
+      - 5000
+    volumes:
+      - "./registry/config.yaml/:/etc/docker/registry/config.yml:ro"
+      - ./resolvs/registry-resolv.conf:/etc/resolv.conf:ro
+    environment:
+      - http_proxy=http://172.38.1.240:7890
+      - https_proxy=http://172.38.1.240:7890
+      - REGISTRY_PROXY_REMOTEURL=https://ghcr.io
+      - REGISTRY_AUTH_HTPASSWD_REALM=token-realm
+      - REGISTRY_AUTH_HTPASSWD_PATH=/run/secrets/htpasswd
+    secrets:
+      - htpasswd
+  registry_quay:
+    image: registry:2.7.1
+    restart: on-failure
+    depends_on:
+      - clash
+    ports:
+      - 5000
+    volumes:
+      - "./registry/config.yaml/:/etc/docker/registry/config.yml:ro"
+      - ./resolvs/registry-resolv.conf:/etc/resolv.conf:ro
+    environment:
+      - http_proxy=http://172.38.1.240:7890
+      - https_proxy=http://172.38.1.240:7890
+      - REGISTRY_PROXY_REMOTEURL=https://quay.io
+      - REGISTRY_AUTH_HTPASSWD_REALM=token-realm
+      - REGISTRY_AUTH_HTPASSWD_PATH=/run/secrets/htpasswd
+    secrets:
+      - htpasswd
   headscale:
     image: "headscale/headscale"
     container_name: "headscale"
@@ -42,5 +138,8 @@ services:
       - "/var/run/docker.sock:/var/run/docker.sock:ro"
       
 
+secrets:
+  htpasswd:
+    file: /home/clemon/volumes/registry/htpasswd
 networks:
   default: {}
