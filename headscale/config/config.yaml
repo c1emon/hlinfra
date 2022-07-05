@@ -46,7 +46,7 @@ private_key_path: /var/lib/headscale/private.key
 # and the associated prefix length, delimited by a slash.
 ip_prefixes:
   - fd7a:115c:a1e0::/48
-  - 100.64.0.0/10
+  - 198.19.0.0/16
 
 # DERP is a relay system that Tailscale uses when a direct
 # connection cannot be established.
