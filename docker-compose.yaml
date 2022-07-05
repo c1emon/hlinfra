@@ -6,7 +6,6 @@ services:
     hostname: "headscale"
     restart: unless-stopped
     ports:
-      # - 80
       - 443
       - 9090
       - 3478:3478
