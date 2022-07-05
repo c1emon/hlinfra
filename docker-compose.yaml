@@ -1,0 +1,46 @@
+version: '3'
+services:
+  headscale:
+    image: "headscale/headscale"
+    container_name: "headscale"
+    hostname: "headscale"
+    restart: unless-stopped
+    ports:
+      - 443
+      - 9090
+      - 3478:3478
+    labels:
+      - "traefik.enable=true"
+      # for headscale main port and derp
+      - "traefik.tcp.routers.headscale.entrypoints=websecure"
+      - "traefik.tcp.routers.headscale.tls.passthrough=true"
+      - "traefik.tcp.routers.headscale.rule=HostSNI(`headscale.domain.example`)"
+      - "traefik.tcp.services.headscale.loadbalancer.server.port=443"
+      # for headscale metrics api
+      - "traefik.http.routers.headscale-metrics.entrypoints=websecure"
+      - "traefik.http.routers.headscale-metrics.rule=Host(`metrics.headscale.domain.example`)"
+      - "traefik.http.services.headscale-metrics.loadbalancer.server.port=9090"
+    volumes:
+      - "./headscale/config:/etc/headscale/:ro"
+      - "./headscale/data:/var/lib/headscale:rw"
+    command:
+      - "headscale"
+      - "serve"
+  traefik:
+    image: "traefik"
+    container_name: "traefik"
+    hostname: "traefik"
+    restart: unless-stopped
+    ports:
+      - 80:80
+      - 443:443
+      - 8080:8080
+    volumes:
+      - "./traefik/acme_prod.json:/acme_prod.json:rw"
+      - "./traefik/acme_stag.json:/acme_stag.json:rw"
+      - "./traefik/traefik.yaml:/traefik.yml:ro"
+      - "/var/run/docker.sock:/var/run/docker.sock:ro"
+      
+
+networks:
+  default: {}
