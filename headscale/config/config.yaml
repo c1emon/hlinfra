@@ -10,11 +10,11 @@
 #
 # https://myheadscale.example.com:443
 #
-server_url: http://netmaker.clemon.icu:8080
+server_url: https://headscale.domain.example:443
 
 # Address to listen to / bind to on the server
 #
-listen_addr: 0.0.0.0:8080
+listen_addr: 0.0.0.0:443
 
 # Address to listen to /metrics, you may want
 # to keep this endpoint private to your internal
@@ -123,7 +123,7 @@ db_path: /var/lib/headscale/db.sqlite
 # TLS for a domain with Let's Encrypt.
 #
 # URL to ACME directory
-acme_url: https://acme-v02.api.letsencrypt.org/directory
+acme_url: https://acme-staging-v02.api.letsencrypt.org/directory
 
 # Email to register with ACME provider
 acme_email: ""
@@ -174,7 +174,7 @@ acl_policy_path: ""
 dns_config:
   # List of DNS servers to expose to clients.
   nameservers:
-    - 1.1.1.1
+    - 114.114.114.114
 
   # Split DNS (see https://tailscale.com/kb/1054/dns/),
   # list of search domains and the DNS to query for each one.

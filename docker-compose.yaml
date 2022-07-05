@@ -6,15 +6,31 @@ services:
     hostname: "headscale"
     restart: unless-stopped
     ports:
-      - 8080
+      - 80
+      - 443
       - 9090
-      - 12345:12345
       - 3478:3478
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.whoami.entrypoints=websecure"
-      - "traefik.http.routers.whoami.tls.certresolver=lets-encr"
-      - "traefik.http.routers.whoami.rule=Host(`whoami.$MY_DOMAIN`)"
+      # for headscale main port and derp
+      - "traefik.tcp.routers.headscale.entrypoints=websecure"
+      - "traefik.tcp.routers.headscale.tls.passthrough=true"
+      - "traefik.tcp.routers.headscale.rule=HostSNI(`headscale.domain.example`)"
+      - "traefik.tcp.routers.headscale.entrypoints=headscale"
+      - "traefik.tcp.services.headscale.loadbalancer.server.port=443"
+      # 
+      - "traefik.tcp.routers.headscale-http.entrypoints=web"
+      - "traefik.tcp.routers.headscale-http.rule=HostSNI(`headscale.domain.example`)"
+      - "traefik.tcp.routers.headscale-http.entrypoints=headscale"
+      - "traefik.tcp.services.headscale-http.loadbalancer.server.port=80"
+      # for headscale metrics api
+      - "traefik.http.routers.headscale-metrics.entrypoints=websecure"
+      - "traefik.http.routers.headscale-metrics.rule=Host(`metrics.headscale.domain.example`)"
+      - "traefik.http.services.headscale-metrics.loadbalancer.server.port=9090"
+      # for derp stun
+      # - "traefik.udp.routers.headscale-stun.entrypoints=websecure"
+      # - "traefik.udp.routers.headscale-stun.entrypoints=headscale"
+      # - "traefik.udp.services.headscale-stun.loadbalancer.server.port=3478"
     volumes:
       - "./headscale/config:/etc/headscale/:ro"
       - "./headscale/data:/var/lib/headscale:rw"
@@ -24,8 +40,8 @@ services:
   traefik:
     image: "traefik"
     container_name: "traefik"
-    restart: unless-stopped
     hostname: "traefik"
+    restart: unless-stopped
     ports:
       - 80:80
       - 443:443
