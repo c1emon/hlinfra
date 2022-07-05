@@ -126,10 +126,10 @@ db_path: /var/lib/headscale/db.sqlite
 acme_url: https://acme-staging-v02.api.letsencrypt.org/directory
 
 # Email to register with ACME provider
-acme_email: ""
+acme_email: "example@gmail.com"
 
 # Domain name to request a TLS certificate for:
-tls_letsencrypt_hostname: ""
+tls_letsencrypt_hostname: "headscale.domain.example"
 
 # Client (Tailscale/Browser) authentication mode (mTLS)
 # Acceptable values:
@@ -145,7 +145,7 @@ tls_letsencrypt_cache_dir: /var/lib/headscale/cache
 # Type of ACME challenge to use, currently supported types:
 # HTTP-01 or TLS-ALPN-01
 # See [docs/tls.md](docs/tls.md) for more information
-tls_letsencrypt_challenge_type: HTTP-01
+tls_letsencrypt_challenge_type: TLS-ALPN-01
 # When HTTP-01 challenge is chosen, letsencrypt must set up a
 # verification endpoint, and it will be listning on:
 # :http = port 80

@@ -21,14 +21,14 @@ certificatesResolvers:
   letsencrypt-prod:
     acme:
       #caServer: https://acme-v02.api.letsencrypt.org/directory
-      email: whatever@gmail.com
-      storage: acme.json
+      email: example@gmail.com
+      storage: acme_prod.json
       httpChallenge:
         entryPoint: web
   letsencrypt-stag:
     acme:
       caServer: https://acme-staging-v02.api.letsencrypt.org/directory
-      email: whatever@gmail.com
-      storage: acme.json
+      email: example@gmail.com
+      storage: acme_stag.json
       httpChallenge:
         entryPoint: web
