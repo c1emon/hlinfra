@@ -123,7 +123,8 @@ db_path: /var/lib/headscale/db.sqlite
 # TLS for a domain with Let's Encrypt.
 #
 # URL to ACME directory
-acme_url: https://acme-staging-v02.api.letsencrypt.org/directory
+# only production acme usable! staging one lead to cert error.
+acme_url: https://acme-v02.api.letsencrypt.org/directory
 
 # Email to register with ACME provider
 acme_email: "example@gmail.com"
@@ -140,7 +141,7 @@ tls_client_auth_mode: relaxed
 
 # Path to store certificates and metadata needed by
 # letsencrypt
-tls_letsencrypt_cache_dir: /var/lib/headscale/cache
+tls_letsencrypt_cache_dir: /var/lib/headscale/tls_cache
 
 # Type of ACME challenge to use, currently supported types:
 # HTTP-01 or TLS-ALPN-01
