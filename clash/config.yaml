@@ -1,0 +1,27 @@
+port: 7890
+socks-port: 7891
+allow-lan: true
+mode: global
+log-level: info
+external-controller: ':9090'
+secret: "secret"
+
+dns:
+  enable: false
+
+proxy-groups:
+  - name: "🚀 Proxy"
+    type: select
+    use:
+      - provider_1
+
+proxy-providers:
+  provider_1: #name of the provider, in this example the name of proxy-provider is remoteproxy
+    type: http
+    path: "./provider_1.yml"
+    url: "http://xxx.example.domian"
+    interval: 3600
+    health-check: #health check option start at here
+      enable: true
+      url: "http://www.gstatic.com/generate_204"
+      interval: 300
