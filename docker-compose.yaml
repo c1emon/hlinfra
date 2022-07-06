@@ -14,13 +14,15 @@ services:
       # http
       - "traefik.http.routers.rancher.entrypoints=web"
       - "traefik.http.routers.rancher.rule=Host(`rancher.domain.example`)"
+      - "traefik.http.routers.rancher.service=rancher"
       - "traefik.http.services.rancher.loadbalancer.server.port=80"
-      - "traefik.http.routers.rancher.middlewares=redirect-to-https"
       - "traefik.http.middlewares.redirect-to-https.redirectscheme.scheme=https"
+      - "traefik.http.routers.rancher.middlewares=redirect-to-https"
       # https
       - "traefik.http.routers.rancher-secure.entrypoints=websecure"
       - "traefik.http.routers.rancher-secure.rule=Host(`rancher.domain.example`)"
       - "traefik.http.services.rancher-secure.loadbalancer.server.port=443"
+      - "traefik.http.routers.rancher-secure.service=rancher"
       - "traefik.http.routers.rancher-secure.tls=true"
       - "traefik.http.routers.rancher-secure.tls.certResolver=letsencrypt-prod"
       - "traefik.http.routers.rancher-secure.middlewares=sslheader"
