@@ -4,31 +4,41 @@ services:
     image: "rancher/rancher:stable"
     container_name: "rancher"
     hostname: "rancher"
-    restart: unless-stopped
+    restart: "unless-stopped"
+    depends_on:
+      - "clash"
     privileged: true
     ports:
-      - 80
-      - 443
+      - "80"
+      - "443"
     labels:
       - "traefik.enable=true"
+      # svc
+      - "traefik.http.services.rancher.loadbalancer.server.port=80"
+      - "traefik.http.services.rancher-secure.loadbalancer.server.port=443"
       # http
       - "traefik.http.routers.rancher.entrypoints=web"
       - "traefik.http.routers.rancher.rule=Host(`rancher.domain.example`)"
       - "traefik.http.routers.rancher.service=rancher"
-      - "traefik.http.services.rancher.loadbalancer.server.port=80"
       - "traefik.http.middlewares.redirect-to-https.redirectscheme.scheme=https"
       - "traefik.http.routers.rancher.middlewares=redirect-to-https"
       # https
       - "traefik.http.routers.rancher-secure.entrypoints=websecure"
       - "traefik.http.routers.rancher-secure.rule=Host(`rancher.domain.example`)"
-      - "traefik.http.services.rancher-secure.loadbalancer.server.port=443"
-      - "traefik.http.routers.rancher-secure.service=rancher"
+      - "traefik.http.routers.rancher-secure.service=rancher-secure"
       - "traefik.http.routers.rancher-secure.tls=true"
       - "traefik.http.routers.rancher-secure.tls.certResolver=letsencrypt-prod"
       - "traefik.http.routers.rancher-secure.middlewares=sslheader"
       - "traefik.http.middlewares.sslheader.headers.customrequestheaders.X-Forwarded-Proto=https"
+      # http to https
+      - "traefik.http.routers.rancher.middlewares=redirect-to-secure"
+      - "traefik.http.middlewares.redirect-to-secure.redirectscheme.scheme=https"
     volumes:
       - "./rancher/data:/var/lib/rancher:rw"
+    environment:
+      - HTTP_PROXY="http://clash:7890"
+      - HTTPS_PROXY="http://clash:7890"
+      - NO_PROXY="localhost,127.0.0.1,0.0.0.0,10.0.0.0/8,cattle-system.svc,192.168.10.0/24,.svc,.cluster.local,example.com"
   clash:
     image: "dreamacro/clash-premium"
     hostname: "clash"
