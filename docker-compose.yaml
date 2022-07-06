@@ -1,27 +1,204 @@
 version: '3'
 services:
+  clash:
+    image: "dreamacro/clash-premium"
+    hostname: "clash"
+    container_name: "clash"
+    restart: "unless-stopped"
+    ports:
+      - "7890"
+      - "9090"
+    labels:
+      - "traefik.enable=true"
+      # svc
+      - "traefik.http.services.clash.loadbalancer.server.port=9090"
+      # http
+      - "traefik.http.routers.clash.entrypoints=web"
+      - "traefik.http.routers.clash.rule=Host(`clash.domain.example`)"
+      - "traefik.http.routers.clash.service=clash"
+      # https
+      - "traefik.http.routers.clash-secure.entrypoints=websecure"
+      - "traefik.http.routers.clash-secure.rule=Host(`clash.domain.example`)"
+      - "traefik.http.routers.clash-secure.service=clash"
+      - "traefik.http.routers.clash-secure.tls=true"
+      - "traefik.http.routers.clash-secure.tls.certresolver=letsencrypt-prod"
+      # http to https
+      - "traefik.http.routers.clash.middlewares=redirect-to-secure"
+      - "traefik.http.middlewares.redirect-to-secure.redirectscheme.scheme=https"
+    volumes:
+      - "./clash/config.yaml:/root/.config/clash/config.yaml:ro"
+  registry_k8s:
+    image: "registry:2"
+    container_name: "registry-k8s"
+    hostname: "registry-k8s"
+    restart: "unless-stopped"
+    depends_on:
+      - "clash"
+    ports:
+      - "5000"
+    labels:
+      - "traefik.enable=true"
+      # svc
+      - "traefik.http.services.registry-k8s.loadbalancer.server.port=5000"
+      # http
+      - "traefik.http.routers.registry-k8s.entrypoints=web"
+      - "traefik.http.routers.registry-k8s.rule=Host(`k8s.registry.domain.example`)"
+      - "traefik.http.routers.registry-k8s.service=registry-k8s"
+      # https 
+      - "traefik.http.routers.registry-k8s-secure.entrypoints=websecure"
+      - "traefik.http.routers.registry-k8s-secure.rule=Host(`k8s.registry.domain.example`)"
+      - "traefik.http.routers.registry-k8s-secure.service=registry-k8s"
+      - "traefik.http.routers.registry-k8s-secure.tls=true"
+      - "traefik.http.routers.registry-k8s-secure.tls.certresolver=letsencrypt-prod"
+      # http to https
+      - "traefik.http.routers.registry-k8s.middlewares=redirect-to-secure"
+      - "traefik.http.middlewares.redirect-to-secure.redirectscheme.scheme=https"
+      # basic auth
+      - "traefik.http.middlewares.basic-auth.basicauth.usersfile=/basic_auth/registry.auth"
+      - "traefik.http.middlewares.basic-auth.basicauth.realm=token-realm"
+      - "traefik.http.middlewares.basic-auth.basicauth.removeheader=true"
+      - "traefik.http.routers.registry-k8s-secure.middlewares=basic-auth"
+    volumes:
+      - "./registry/config.yaml/:/etc/docker/registry/config.yml:ro"
+    environment:
+      - http_proxy=http://clash:7890
+      - https_proxy=http://clash:7890
+      - REGISTRY_PROXY_REMOTEURL=https://k8s.gcr.io
+  registry_gcr:
+    image: "registry:2"
+    container_name: "registry-gcr"
+    hostname: "registry-gcr"
+    restart: "unless-stopped"
+    depends_on:
+      - "clash"
+    ports:
+      - "5000"
+    labels:
+      - "traefik.enable=true"
+      # svc
+      - "traefik.http.services.registry-gcr.loadbalancer.server.port=5000"
+      # http
+      - "traefik.http.routers.registry-gcr.entrypoints=web"
+      - "traefik.http.routers.registry-gcr.rule=Host(`gcr.registry.domain.example`)"
+      - "traefik.http.routers.registry-gcr.service=registry-k8s"
+      # https 
+      - "traefik.http.routers.registry-gcr-secure.entrypoints=websecure"
+      - "traefik.http.routers.registry-gcr-secure.rule=Host(`gcr.registry.domain.example`)"
+      - "traefik.http.routers.registry-gcr-secure.service=registry-k8s"
+      - "traefik.http.routers.registry-gcr-secure.tls=true"
+      - "traefik.http.routers.registry-gcr-secure.tls.certresolver=letsencrypt-prod"
+      # http to https
+      - "traefik.http.routers.registry-gcr.middlewares=redirect-to-secure"
+      - "traefik.http.middlewares.redirect-to-secure.redirectscheme.scheme=https"
+      # basic auth
+      - "traefik.http.middlewares.basic-auth.basicauth.usersfile=/basic_auth/registry.auth"
+      - "traefik.http.middlewares.basic-auth.basicauth.realm=token-realm"
+      - "traefik.http.middlewares.basic-auth.basicauth.removeheader=true"
+      - "traefik.http.routers.registry-gcr-secure.middlewares=basic-auth"
+    volumes:
+      - "./registry/config.yaml/:/etc/docker/registry/config.yml:ro"
+    environment:
+      - http_proxy=http://clash:7890
+      - https_proxy=http://clash:7890
+      - REGISTRY_PROXY_REMOTEURL=https://gcr.io
+  registry_ghcr:
+    image: "registry:2"
+    container_name: "registry-ghcr"
+    hostname: "registry-ghcr"
+    restart: "unless-stopped"
+    depends_on:
+      - "clash"
+    ports:
+      - "5000"
+    labels:
+      - "traefik.enable=true"
+      # svc
+      - "traefik.http.services.registry-ghcr.loadbalancer.server.port=5000"
+      # http
+      - "traefik.http.routers.registry-ghcr.entrypoints=web"
+      - "traefik.http.routers.registry-ghcr.rule=Host(`ghcr.registry.domain.example`)"
+      - "traefik.http.routers.registry-ghcr.service=registry-ghcr"
+      # https 
+      - "traefik.http.routers.registry-ghcr-secure.entrypoints=websecure"
+      - "traefik.http.routers.registry-ghcr-secure.rule=Host(`ghcr.registry.domain.example`)"
+      - "traefik.http.routers.registry-ghcr-secure.service=registry-ghcr"
+      - "traefik.http.routers.registry-ghcr-secure.tls=true"
+      - "traefik.http.routers.registry-ghcr-secure.tls.certresolver=letsencrypt-prod"
+      # http to https
+      - "traefik.http.routers.registry-ghcr.middlewares=redirect-to-secure"
+      - "traefik.http.middlewares.redirect-to-secure.redirectscheme.scheme=https"
+      # basic auth
+      - "traefik.http.middlewares.basic-auth.basicauth.usersfile=/basic_auth/registry.auth"
+      - "traefik.http.middlewares.basic-auth.basicauth.realm=token-realm"
+      - "traefik.http.middlewares.basic-auth.basicauth.removeheader=true"
+      - "traefik.http.routers.registry-ghcr-secure.middlewares=basic-auth"
+    volumes:
+      - "./registry/config.yaml/:/etc/docker/registry/config.yml:ro"
+    environment:
+      - http_proxy=http://clash:7890
+      - https_proxy=http://clash:7890
+      - REGISTRY_PROXY_REMOTEURL=https://ghcr.io
+  registry_quay:
+    image: "registry:2"
+    container_name: "registry-quay"
+    hostname: "registry-quay"
+    restart: "unless-stopped"
+    depends_on:
+      - "clash"
+    ports:
+      - "5000"
+    labels:
+      - "traefik.enable=true"
+      # svc
+      - "traefik.http.services.registry-quay.loadbalancer.server.port=5000"
+      # http
+      - "traefik.http.routers.registry-quay.entrypoints=web"
+      - "traefik.http.routers.registry-quay.rule=Host(`quay.registry.domain.example`)"
+      - "traefik.http.routers.registry-quay.service=registry-quay"
+      # https 
+      - "traefik.http.routers.registry-quay-secure.entrypoints=websecure"
+      - "traefik.http.routers.registry-quay-secure.rule=Host(`quay.registry.domain.example`)"
+      - "traefik.http.routers.registry-quay-secure.service=registry-quay"
+      - "traefik.http.routers.registry-quay-secure.tls=true"
+      - "traefik.http.routers.registry-quay-secure.tls.certresolver=letsencrypt-prod"
+      # http to https
+      - "traefik.http.routers.registry-quay.middlewares=redirect-to-secure"
+      - "traefik.http.middlewares.redirect-to-secure.redirectscheme.scheme=https"
+      # basic auth
+      - "traefik.http.middlewares.basic-auth.basicauth.usersfile=/basic_auth/registry.auth"
+      - "traefik.http.middlewares.basic-auth.basicauth.realm=token-realm"
+      - "traefik.http.middlewares.basic-auth.basicauth.removeheader=true"
+      - "traefik.http.routers.registry-quay-secure.middlewares=basic-auth"
+    volumes:
+      - "./registry/config.yaml/:/etc/docker/registry/config.yml:ro"
+    environment:
+      - http_proxy=http://clash:7890
+      - https_proxy=http://clash:7890
+      - REGISTRY_PROXY_REMOTEURL=https://quay.io
   headscale:
     image: "headscale/headscale"
     container_name: "headscale"
     hostname: "headscale"
-    restart: unless-stopped
+    restart: "unless-stopped"
     ports:
-      - 443
-      - 9090
+      - "443"
+      - "9090"
       - "3478:3478/udp"
     labels:
       - "traefik.enable=true"
+      # svc
+      - "traefik.tcp.services.headscale.loadbalancer.server.port=443"
+      - "traefik.http.services.headscale-metrics.loadbalancer.server.port=9090"
       # for headscale main port and derp
       - "traefik.tcp.routers.headscale.entrypoints=websecure"
       - "traefik.tcp.routers.headscale.tls.passthrough=true"
       - "traefik.tcp.routers.headscale.rule=HostSNI(`headscale.domain.example`)"
-      - "traefik.tcp.services.headscale.loadbalancer.server.port=443"
       # for headscale metrics api
       - "traefik.http.routers.headscale-metrics.entrypoints=websecure"
       - "traefik.http.routers.headscale-metrics.rule=Host(`metrics.headscale.domain.example`)"
-      - "traefik.http.services.headscale-metrics.loadbalancer.server.port=9090"
+      - "traefik.http.routers.headscale-metrics.service=headscale-metrics"
     volumes:
-      - "./headscale/config:/etc/headscale/:ro"
+      - "./headscale/config:/etc/headscale:ro"
       - "./headscale/data:/var/lib/headscale:rw"
     command:
       - "headscale"
@@ -30,12 +207,13 @@ services:
     image: "traefik"
     container_name: "traefik"
     hostname: "traefik"
-    restart: unless-stopped
+    restart: "unless-stopped"
     ports:
-      - 80:80
-      - 443:443
-      - 8080:8080
+      - "80:80"
+      - "443:443"
+      - "8080:8080"
     volumes:
+      - "./traefik/basic_auth:/basic_auth:ro"
       - "./traefik/acme_prod.json:/acme_prod.json:rw"
       - "./traefik/acme_stag.json:/acme_stag.json:rw"
       - "./traefik/traefik.yaml:/traefik.yml:ro"
