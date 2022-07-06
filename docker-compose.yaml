@@ -25,12 +25,33 @@ services:
   #   ports:
   #     - "80"
   registry_k8s:
-    image: registry:2.7.1
-    restart: on-failure
+    image: "registry:2"
+    container_name: "registry_k8s"
+    hostname: "registry_k8s"
+    restart: unless-stopped
     depends_on:
       - clash
     ports:
       - 5000
+    labels:
+      - "traefik.enable=true"
+      # http
+      - "traefik.http.routers.registry-k8s.entrypoints=web"
+      - "traefik.http.routers.registry-k8s.rule=Host(`k8s.registry.domain.example`)"
+      - "traefik.http.routers.registry-k8s.middlewares=redirect-to-secure"
+      # https
+      - "traefik.http.routers.registry-k8s-secure.entrypoints=websecure"
+      - "traefik.http.routers.registry-k8s-secure.rule=Host(`k8s.registry.domain.example`)"
+      - "traefik.http.services.registry-k8s-secure.loadbalancer.server.port=5000"
+      - "traefik.http.routers.registry-k8s-secure.tls.certresolver=letsencrypt-prod"
+      - "traefik.http.routers.registry-k8s-secure.tls=true"
+      # http to https
+      - "traefik.http.middlewares.redirect-to-secure.redirectscheme.scheme=https"
+      # basic auth
+      - "traefik.http.middlewares.basic-auth.basicauth.users=clemon:$2y$05$JIMzbm8rUsCvERh1qKZpEOkhs2B1wshLBfrzKehq//4KYMVFWULvW"
+      - "traefik.http.routers.registry-k8s.middlewares=basic-auth@docker"
+      - "traefik.http.middlewares.basic-auth.basicauth.realm=token-realm"
+      - "traefik.http.middlewares.basic-auth.basicauth.removeheader=true"
     volumes:
       - "./registry/config.yaml/:/etc/docker/registry/config.yml:ro"
       - ./resolvs/registry-resolv.conf:/etc/resolv.conf:ro
@@ -38,8 +59,8 @@ services:
       - http_proxy=http://172.38.1.240:7890
       - https_proxy=http://172.38.1.240:7890
       - REGISTRY_PROXY_REMOTEURL=https://k8s.gcr.io
-      - REGISTRY_AUTH_HTPASSWD_REALM=token-realm
-      - REGISTRY_AUTH_HTPASSWD_PATH=/run/secrets/htpasswd
+      # - REGISTRY_AUTH_HTPASSWD_REALM=token-realm
+      # - REGISTRY_AUTH_HTPASSWD_PATH=/run/secrets/htpasswd
     secrets:
       - htpasswd
   registry_gcr:
