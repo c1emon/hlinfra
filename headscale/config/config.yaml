@@ -13,8 +13,8 @@
 server_url: https://headscale.domain.example:443
 
 # Address to listen to / bind to on the server
-#
-listen_addr: 0.0.0.0:443
+# By :443, headscale listen on both ipv4 and ipv6
+listen_addr: :443
 
 # Address to listen to /metrics, you may want
 # to keep this endpoint private to your internal
