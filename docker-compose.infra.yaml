@@ -1,0 +1,53 @@
+version: '3.9'
+services:
+  headscale:
+    image: "headscale/headscale"
+    container_name: "headscale"
+    hostname: "headscale"
+    restart: "unless-stopped"
+    networks:
+      - infra-bridge
+    ports:
+      - "443"
+      - "9090"
+      - "3478:3478/udp"
+    labels:
+      - "traefik.enable=true"
+      # svc
+      - "traefik.tcp.services.headscale.loadbalancer.server.port=443"
+      - "traefik.http.services.headscale-metrics.loadbalancer.server.port=9090"
+      # for headscale main port and derp
+      - "traefik.tcp.routers.headscale.entrypoints=websecure"
+      - "traefik.tcp.routers.headscale.tls.passthrough=true"
+      - "traefik.tcp.routers.headscale.rule=HostSNI(`headscale.domain.example`)"
+      # for headscale metrics api
+      - "traefik.http.routers.headscale-metrics.entrypoints=websecure"
+      - "traefik.http.routers.headscale-metrics.rule=Host(`metrics.headscale.domain.example`)"
+      - "traefik.http.routers.headscale-metrics.service=headscale-metrics"
+    volumes:
+      - "./headscale/config:/etc/headscale:ro"
+      - "./headscale/data:/var/lib/headscale:rw"
+    command:
+      - "headscale"
+      - "serve"
+  traefik:
+    image: "traefik"
+    container_name: "traefik"
+    hostname: "traefik"
+    restart: "unless-stopped"
+    networks:
+      - infra-bridge
+    ports:
+      - "80:80"
+      - "443:443"
+      - "8080:8080"
+    volumes:
+      - "./traefik/basic_auth:/basic_auth:ro"
+      - "./traefik/acme_prod.json:/acme_prod.json:rw"
+      - "./traefik/acme_stag.json:/acme_stag.json:rw"
+      - "./traefik/traefik.yaml:/traefik.yml:ro"
+      - "/var/run/docker.sock:/var/run/docker.sock:ro"
+      
+
+networks:
+  infra-bridge: {}
