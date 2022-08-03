@@ -215,5 +215,5 @@ services:
 
 networks:
   default:
-    name: infra-bridge
+    name: hlinfra_infra_bridge
     external: true

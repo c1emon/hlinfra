@@ -50,4 +50,4 @@ services:
       
 
 networks:
-  infra-bridge: {}
+  infra_bridge: {}
