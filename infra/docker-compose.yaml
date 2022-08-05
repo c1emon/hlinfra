@@ -6,12 +6,15 @@ services:
     hostname: "headscale"
     restart: "unless-stopped"
     networks:
-      - infra-bridge
+      - bridge
     ports:
       - "443"
       - "9090"
       - "3478:3478/udp"
     labels:
+      # auto update image
+      - "com.centurylinklabs.watchtower.enable=true"
+      # traefik
       - "traefik.enable=true"
       # svc
       - "traefik.tcp.services.headscale.loadbalancer.server.port=443"
@@ -36,18 +39,30 @@ services:
     hostname: "traefik"
     restart: "unless-stopped"
     networks:
-      - infra-bridge
+      - bridge
     ports:
       - "80:80"
       - "443:443"
       - "8080:8080"
+    labels:
+      # auto update image
+      - "com.centurylinklabs.watchtower.enable=true"
     volumes:
       - "./traefik/basic_auth:/basic_auth:ro"
       - "./traefik/acme_prod.json:/acme_prod.json:rw"
       - "./traefik/acme_stag.json:/acme_stag.json:rw"
       - "./traefik/traefik.yaml:/traefik.yml:ro"
       - "/var/run/docker.sock:/var/run/docker.sock:ro"
-      
+  watchtower:
+    image: "containrrr/watchtower"
+    container_name: "watchtower"
+    hostname: "watchtower"
+    restart: "always"
+    environment: 
+        - TZ=Asia/Shanghai
+    volumes:
+      - "/var/run/docker.sock:/var/run/docker.sock:rw"
+    command: --label-enable --cleanup --schedule "0 0 4 * * *"
 
 networks:
-  infra_bridge: {}
+  bridge: {}
