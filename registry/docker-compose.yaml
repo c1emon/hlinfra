@@ -9,6 +9,9 @@ services:
       - "7890"
       - "9090"
     labels:
+      # auto update image
+      - "com.centurylinklabs.watchtower.enable=true"
+      # traefik
       - "traefik.enable=true"
       # svc
       - "traefik.http.services.clash.loadbalancer.server.port=9090"
@@ -37,6 +40,9 @@ services:
     ports:
       - "5000"
     labels:
+      # auto update image
+      - "com.centurylinklabs.watchtower.enable=true"
+      # traefik
       - "traefik.enable=true"
       # svc
       - "traefik.http.services.registry-k8s-gcr.loadbalancer.server.port=5000"
@@ -74,6 +80,9 @@ services:
     ports:
       - "5000"
     labels:
+      # auto update image
+      - "com.centurylinklabs.watchtower.enable=true"
+      # traefik
       - "traefik.enable=true"
       # svc
       - "traefik.http.services.registry-gcr.loadbalancer.server.port=5000"
@@ -111,6 +120,9 @@ services:
     ports:
       - "5000"
     labels:
+      # auto update image
+      - "com.centurylinklabs.watchtower.enable=true"
+      # traefik
       - "traefik.enable=true"
       # svc
       - "traefik.http.services.registry-ghcr.loadbalancer.server.port=5000"
@@ -148,6 +160,9 @@ services:
     ports:
       - "5000"
     labels:
+      # auto update image
+      - "com.centurylinklabs.watchtower.enable=true"
+      # traefik
       - "traefik.enable=true"
       # svc
       - "traefik.http.services.registry-quay.loadbalancer.server.port=5000"
@@ -185,6 +200,9 @@ services:
     ports:
       - "5000"
     labels:
+      # auto update image
+      - "com.centurylinklabs.watchtower.enable=true"
+      # traefik
       - "traefik.enable=true"
       # svc
       - "traefik.http.services.registry-k8s.loadbalancer.server.port=5000"
@@ -215,5 +233,5 @@ services:
 
 networks:
   default:
-    name: hlinfra_infra_bridge
+    name: infra_bridge
     external: true
